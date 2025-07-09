@@ -22,6 +22,7 @@ Requirements:
 """
 
 import subprocess
+import zipfile
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -71,7 +72,7 @@ TEAMS: Dict[str, Dict[str, str]] = {
 
 def run_cmd(cmd: List[str]) -> None:
     """Run a subprocess command, raising on failure."""
-    print(f"→ {' '.join(cmd)}")  # noqa: W605
+    print(f"→ {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
 
@@ -139,6 +140,39 @@ def sign_csr(
         cmd += ["-extfile", str(extfile)]
     run_cmd(cmd)
 
+ZIPS_DIR: Path = BASE_DIR / "zips"
+
+
+def create_zips() -> None:
+    """Package all required certs/keys into per-team zip files for deployment."""
+    make_dir(ZIPS_DIR)
+    readme_content = """# mTLS Deployment Certificate Package
+
+This archive contains all credentials and verification files required to run your mTLS-enabled service:
+
+- `<team>-client.key`    :: Your private client key
+- `<team>-client.crt`    :: Your signed client certificate
+- `<team>-server.key`    :: Your private server key
+- `<team>-server.crt`    :: Your signed server certificate
+- `<team>-server-ca.crt` :: Your local CA certificate
+- `root-client-ca.crt`   :: Shared root CA for validating other teams' certificates
+"""
+
+    for team in TEAMS:
+        zip_path = ZIPS_DIR / f"{team}.zip"
+        with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
+            # Client key, CSR, signed cert
+            zipf.write(PROVIDER_DIR / f"{team}-client.key", arcname=f"{team}-client.key")
+            zipf.write(PROVIDER_DIR / f"{team}-client.crt", arcname=f"{team}-client.crt")
+            zipf.write(CLIENT_CA_CRT, arcname="root-client-ca.crt")
+
+            # Server key, signed cert, and CA
+            zipf.write(SERVER_CERT_DIR / f"{team}-server.key", arcname=f"{team}-server.key")
+            zipf.write(SERVER_CERT_DIR / f"{team}-server.crt", arcname=f"{team}-server.crt")
+            zipf.write(SERVER_CA_DIR / f"{team}-server-ca.crt", arcname=f"{team}-server-ca.crt")
+            zipf.writestr("README.txt", readme_content.replace("<team>", team))
+
+        print(f"✅ Created: {zip_path}")
 
 def main() -> None:
     # Prepare directories
@@ -189,6 +223,11 @@ def main() -> None:
         sign_csr(server_csr, server_ca_crt, server_ca_key, server_crt, serial=idx, extfile=EXTFILE)
 
     print("\n\033[92mAll certificates generated successfully.\033[0m")
+
+
+    create_zips()
+    print("All team files zipped under:", ZIPS_DIR)
+
 
 if __name__ == "__main__":
     main()

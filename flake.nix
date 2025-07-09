@@ -10,7 +10,10 @@
         pkgs = (import (inputs.nixpkgs) { inherit system; });
       in {
         devShell = pkgs.mkShell {
-          buildInputs= with pkgs; [ openssl ];
+          buildInputs= with pkgs; [
+            openssl
+            certbot
+          ];
         };
       }
     );
