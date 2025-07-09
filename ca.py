@@ -50,18 +50,21 @@ DN_COMMON: Dict[str, str] = {
 
 # Per-team configuration
 TEAMS: Dict[str, Dict[str, str]] = {
-    "sumsang-company":      { "commonName": "sumsang-company.com"},
-    "electronics-supplier": { "commonName": "" },
-    "screen-supplier":      { "commonName": "" },
-    "case-supplier":        { "commonName": "" },
-    "bulk-logistics":       { "commonName": "" },
-    "consumer-logistics":   { "commonName": "" },
-    "pear-company":         { "commonName": "" },
-    "sumsang-company":      { "commonName": "" },
-    "commercial-bank":      { "commonName": "" },
-    "retail-bank":          { "commonName": "" },
-    "thoh":                 { "commonName": "" },
-    "recycler":             { "commonName": "" }
+    "electronics-supplier": { "commonName": "electronics-supplier-api.projects.bbdgrad.com" },
+    "screen-supplier":      { "commonName": "screen-supplier-api.projects.bbdgrad.com" },
+    "case-supplier":        { "commonName": "case-supplier-api.projects.bbdgrad.com" },
+
+    "bulk-logistics":       { "commonName": "bulk-logistics-api.projects.bbdgrad.com" },
+    "consumer-logistics":   { "commonName": "consumer-logistics-api.projects.bbdgrad.com" },
+
+    "pear-company":         { "commonName": "pear-company-api.projects.bbdgrad.com" },
+    "sumsang-company":      { "commonName": "sumsang-phones-api.projects.bbdgrad.com" },
+
+    "commercial-bank":      { "commonName": "commercial-bank-api.projects.bbdgrad.com" },
+    "retail-bank":          { "commonName": "retail-bank-api.projects.bbdgrad.com" },
+
+    "thoh":                 { "commonName": "thoh-api.projects.bbdgrad.com" },
+    "recycler":             { "commonName": "recycler-api.projects.bbdgrad.com" },
 }
 
 # ─── Helper Functions ────────────────────────────────────────────────────────
@@ -154,6 +157,7 @@ def main() -> None:
 
     # Loop over each team
     for idx, (team, cfg) in enumerate(TEAMS.items(), start=1):
+        print(f"\n\033[94m----- Generating {team} certificates -----\033[0m")
         cn = cfg["commonName"]
 
         # Client certificate
@@ -184,7 +188,7 @@ def main() -> None:
         create_csr(server_key, server_csr, subj_srv)
         sign_csr(server_csr, server_ca_crt, server_ca_key, server_crt, serial=idx, extfile=EXTFILE)
 
-    print("\nAll certificates generated successfully.")
+    print("\n\033[92mAll certificates generated successfully.\033[0m")
 
 if __name__ == "__main__":
     main()
