@@ -63,4 +63,15 @@ certs/
 
 ---
 
-With this layout and file‑type usage, adding new teams is as simple as dropping their `commonName` into the `TEAMS` dict and re‑running `generate_certs.py`.
+## Example mTLS Interaction: team-a ➝ team-b
+
+1. `team-a` initiates a TLS connection to `team-b.com` using the IP or DNS of `team-b`'s server.
+2. `team-b` sends its server certificate (`team-b-server.crt`) to `team-a` as part of the TLS handshake.
+3. `team-a` verifies `team-b-server.crt` by checking:
+  - It was signed by the shared `root-ca.crt`
+  - The CN or SAN matches `team-b.com`
+4. `team-a` then presents its own client certificate (`team-a-client.crt`) to `team-b` during the same handshake.
+5. `team-b` verifies `team-a-client.crt` by checking:
+  - It was signed by the same shared `root-ca.crt`
+  - The certificate subject (e.g., CN/OU) matches the expected client identity
+6. If all checks pass on both sides, a secure mutual TLS (mTLS) channel is established.
